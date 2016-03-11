@@ -117,11 +117,6 @@ class FormSplitter(MultiFunction):
         else:
             return expr
 
-        if all(isinstance(index, FixedIndex) for index in multiindex):
-            pass
-        else:
-            return MultiFunction.reuse_if_untouched(self, o, expr, multiindex)
-
     def argument(self, o):
         V = o.function_space()
         if len(V) == 1:
