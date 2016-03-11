@@ -16,6 +16,9 @@ from ufl import Form, as_vector
 from ufl.corealg.map_dag import MultiFunction
 from ufl.algorithms.map_integrands import map_integrand_dags
 from ufl.constantvalue import Zero
+from ufl.tensors import ListTensor
+from ufl.indexing import FixedIndex, MultiIndex
+from ufl.indexed import Indexed
 from firedrake.ufl_expr import Argument
 
 from tsfc import compile_form as tsfc_compile_form
@@ -102,6 +105,22 @@ class FormSplitter(MultiFunction):
 
     def multi_index(self, o):
         return o
+
+    def indexed(self, o, expr, multiindex):
+        indices = list(multiindex)
+        while indices and isinstance(expr, ListTensor) and isinstance(indices[0], FixedIndex):
+            index = indices.pop(0)
+            expr = expr.ufl_operands[int(index)]
+
+        if indices:
+            return Indexed(expr, MultiIndex(indices))
+        else:
+            return expr
+
+        if all(isinstance(index, FixedIndex) for index in multiindex):
+            pass
+        else:
+            return MultiFunction.reuse_if_untouched(self, o, expr, multiindex)
 
     def argument(self, o):
         V = o.function_space()
