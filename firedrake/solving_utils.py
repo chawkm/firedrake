@@ -76,8 +76,10 @@ def _extract_kwargs(**kwargs):
     nullspace = kwargs.get('nullspace', None)
     tnullspace = kwargs.get('transpose_nullspace', None)
     options_prefix = kwargs.get('options_prefix', None)
+    pre_jacobian_callback = kwargs.get('pre_jacobian_callback', None)
+    pre_function_callback = kwargs.get('pre_function_callback', None)
 
-    return parameters, nullspace, tnullspace, options_prefix
+    return parameters, nullspace, tnullspace, options_prefix, pre_jacobian_callback, pre_function_callback
 
 
 class _SNESContext(object):
@@ -92,9 +94,11 @@ class _SNESContext(object):
     get the context (which is one of these objects) to find the
     Firedrake level information.
     """
-    def __init__(self, problems):
+    def __init__(self, problems, pre_jacobian_callback, pre_function_callback):
         problems = as_tuple(problems)
         self._problems = problems
+        self._pre_jacobian_callback = pre_jacobian_callback
+        self._pre_function_callback = pre_function_callback
         # Build the jacobian with the correct sparsity pattern.  Note
         # that since matrix assembly is lazy this doesn't actually
         # force an additional assembly of the matrix since in
@@ -183,6 +187,8 @@ class _SNESContext(object):
             if v != X:
                 X.copy(v)
 
+        if ctx._pre_function_callback is not None:
+            ctx._pre_function_callback(X)
         assemble(ctx.Fs[lvl], tensor=ctx._Fs[lvl],
                  form_compiler_parameters=problem.form_compiler_parameters,
                  nest=problem._nest)
@@ -224,6 +230,8 @@ class _SNESContext(object):
         # copy guess in from X.
         with ctx._xs[lvl].dat.vec as v:
             X.copy(v)
+        if ctx._pre_jacobian_callback is not None:
+            ctx._pre_jacobian_callback(X)
         assemble(ctx.Js[lvl],
                  tensor=ctx._jacs[lvl],
                  bcs=problem.bcs,

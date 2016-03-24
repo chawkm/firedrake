@@ -110,7 +110,7 @@ class NonlinearVariationalSolver(object):
 
             {'snes_monitor': True}
         """
-        parameters, nullspace, nullspace_T, options_prefix = solving_utils._extract_kwargs(**kwargs)
+        parameters, nullspace, nullspace_T, options_prefix, pre_jacobian_callback, pre_function_callback = solving_utils._extract_kwargs(**kwargs)
 
         # Do this first so __del__ doesn't barf horribly if we get an
         # error in __init__
@@ -124,7 +124,7 @@ class NonlinearVariationalSolver(object):
 
         assert isinstance(problem, NonlinearVariationalProblem)
 
-        ctx = solving_utils._SNESContext(problem)
+        ctx = solving_utils._SNESContext(problem, pre_jacobian_callback, pre_function_callback)
 
         self.snes = PETSc.SNES().create(comm=problem.dm.comm)
 
