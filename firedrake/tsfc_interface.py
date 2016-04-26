@@ -113,7 +113,7 @@ class FormSplitter(MultiFunction):
             expr = expr.ufl_operands[int(index)]
 
         if indices:
-            return Indexed(expr, MultiIndex(indices))
+            return Indexed(expr, MultiIndex(tuple(indices)))
         else:
             return expr
 
