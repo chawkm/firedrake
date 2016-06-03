@@ -24,7 +24,7 @@ def projection(mesh):
     #f.interpolate(sin(x[0]*pi*2)*sin(x[1]*pi*2))
     f.interpolate(Expression("cos(x[0]*pi*2)*cos(x[1]*pi*2)"))
 
-    #rstr = '+'
+    rstr = '+'
 
     # Construct the bilinear form
     a_dx = u*v*dx
@@ -51,7 +51,7 @@ def projection(mesh):
 uherr = []
 trerr = []
 # Create a mesh
-for r in range(10):
+for r in range(8):
     res = 2**r
     mesh = UnitSquareMesh(res, res)
 
