@@ -20,8 +20,7 @@ def projection(mesh):
 
     # Interpolate smooth function into the CG space
     f = Function(HCG)
-    x = SpatialCoordinate(mesh)
-    #f.interpolate(sin(x[0]*pi*2)*sin(x[1]*pi*2))
+    #x = SpatialCoordinate(mesh)
     f.interpolate(Expression("cos(x[0]*pi*2)*cos(x[1]*pi*2)"))
 
     rstr = '+'
@@ -38,8 +37,12 @@ def projection(mesh):
 
     # Solution
     w = Function(W)
-    solve(a == L, w, solver_parameters={'ksp_rtol': 1e-14,
-                                    'ksp_max_it': 10000})
+    lhs = assemble(a,nest=False)
+    rhs = assemble(L)
+    lhs.M.values
+    rhs.dat.data
+
+    solve(a == L, w, solver_parameters={'ksp_rtol': 1e-14})
     u_h, tr_h = w.split()
 
     #uherr = sqrt(assemble((u_h-f)*(u_h-f)*dx))
