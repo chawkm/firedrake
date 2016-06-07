@@ -3,11 +3,11 @@ import numpy as np
 
 def projection(mesh):
     # Define the function spaces for testing (Pk CG, and Pk Trace)
-    k = 2
+    k = 1
     CG = FunctionSpace(mesh, "CG", k)
     TraceSpace = FunctionSpace(mesh, "HDiv Trace", k)
 
-    HCG = FunctionSpace(mesh, "CG", k+3)
+    HCG = FunctionSpace(mesh, "CG", k+1)
 
     W = CG*TraceSpace
 
@@ -37,10 +37,6 @@ def projection(mesh):
 
     # Solution
     w = Function(W)
-    lhs = assemble(a,nest=False)
-    rhs = assemble(L)
-    lhs.M.values
-    rhs.dat.data
 
     solve(a == L, w, solver_parameters={'ksp_rtol': 1e-14})
     u_h, tr_h = w.split()
@@ -48,11 +44,13 @@ def projection(mesh):
     #uherr = sqrt(assemble((u_h-f)*(u_h-f)*dx))
     uherr = sqrt(assemble((u_h - f)*(u_h - f)*ds + (avg(u_h) - avg(f))*(avg(u_h) - avg(f))*dS))
     trerr = sqrt(assemble((tr_h - f)*(tr_h - f)*ds + (avg(tr_h) - avg(f))*(avg(tr_h) - avg(f))*dS))
+    err = sqrt(assemble((u_h - tr_h)*(u_h - tr_h)*ds + (avg(u_h) - avg(tr_h))*(avg(u_h) - avg(tr_h))*dS))
 
-    return uherr, trerr
+    return uherr, trerr, err
 
 uherr = []
 trerr = []
+err = []
 # Create a mesh
 for r in range(8):
     res = 2**r
@@ -61,11 +59,15 @@ for r in range(8):
     e = projection(mesh)
     uherr.append(e[0])
     trerr.append(e[1])
+    err.append(e[2])
 
 uherr = np.array(uherr)
 trerr = np.array(trerr)
+err = np.array(err)
 
 print np.log(uherr[1:]/uherr[:-1])/np.log(0.5)
 print np.log(trerr[1:]/trerr[:-1])/np.log(0.5)
-print uherr
-print trerr
+
+#print uherr
+#print trerr
+print err
