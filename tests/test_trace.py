@@ -7,12 +7,11 @@ def projection(mesh):
     CG = FunctionSpace(mesh, "CG", k)
     TraceSpace = FunctionSpace(mesh, "HDiv Trace", k)
 
-    HCG = FunctionSpace(mesh, "CG", k+1)
+    # Define the space where we interpolate f
+    hdeg = k+1
+    HCG = FunctionSpace(mesh, "CG", hdeg)
 
     W = CG*TraceSpace
-
-    # Create mesh normal for trace integrals
-    n = FacetNormal(mesh)
 
     # Define trial and test functions
     u, lambdar = TrialFunctions(W)
@@ -22,8 +21,6 @@ def projection(mesh):
     f = Function(HCG)
     #x = SpatialCoordinate(mesh)
     f.interpolate(Expression("cos(x[0]*pi*2)*cos(x[1]*pi*2)"))
-
-    rstr = '+'
 
     # Construct the bilinear form
     a_dx = u*v*dx
@@ -70,4 +67,4 @@ print np.log(trerr[1:]/trerr[:-1])/np.log(0.5)
 
 #print uherr
 #print trerr
-print err
+print "The error in the trace-norm: ", err
