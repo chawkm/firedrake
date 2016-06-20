@@ -3,9 +3,9 @@ import numpy as np
 
 def hybrid_galerkin_proj(mesh):
     # Define relevant function spaces
-    degree = 1
+    degree = 3
     RaviartThomas = FiniteElement("RT", triangle, degree)
-    HRT = FiniteElement("RT", triangle, degree + 1)
+    HRT = FiniteElement("RT", triangle, degree)
     HRTspace = FunctionSpace(mesh, HRT)
     BrokenRT = FunctionSpace(mesh, BrokenElement(RaviartThomas))
     TraceRT = FunctionSpace(mesh, "HDiv Trace", degree-1)
@@ -35,21 +35,19 @@ def hybrid_galerkin_proj(mesh):
     hSigma, hLambdar = w.split()
 
     sigmaError = sqrt(assemble(dot(hSigma - f, hSigma - f)*dx))
-    lambdarError = sqrt(assemble((avg(hLambdar) - jump(f, n=n))*(avg(hLambdar) - jump(f, n=n))*dS))
+    lambdarError = sqrt(assemble((2*avg(hLambdar) - jump(f, n=n))*(2*avg(hLambdar) - jump(f, n=n))*dS))
 
     return sigmaError, lambdarError
 
 sigErr = []
 lamErr = []
 
-for r in range(8):
     # Create a mesh
-    res = 2**r
-    mesh = UnitSquareMesh(res,res)
+mesh = UnitSquareMesh(10,10, quadrilateral=True)
 
-    e = hybrid_galerkin_proj(mesh)
-    sigErr.append(e[0])
-    lamErr.append(e[1])
+e = hybrid_galerkin_proj(mesh)
+sigErr.append(e[0])
+lamErr.append(e[1])
 
 sigErr = np.array(sigErr)
 lamErr = np.array(lamErr)
