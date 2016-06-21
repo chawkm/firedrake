@@ -23,29 +23,26 @@ def test_hybrid_helmholtz(mesh):
     f.interpolate(Expression("(1+8*pi*pi)*sin(2*pi*x[0])*sin(2*pi*x[1])"))
 
     # Define the variational forms
-    a_dx = dot(tau, sigma)*dx - u*div(tau)*dx + u*v*dx + v*div(sigma)*dx
+    a_dx = dot(tau, sigma)*dx + u*div(tau)*dx + u*v*dx + v*div(sigma)*dx
     a_dS = lambdar('+')*jump(tau, n=n)*dS + gammar('+')*jump(sigma, n=n)*dS
     a = a_dx + a_dS
-    L = v*f*dx
+    L = -v*f*dx
 
-    # Strongly enforce Dirichlet BC
+    # Strongly enforce BC
     bc = DirichletBC(W.sub(2), Constant(0), (1, 2, 3, 4))
 
     # Compute solution
     w = Function(W)
-    solve(a == L, w, solver_parameters={'pc_type:': 'lu',
-                                        'ksp_rtol': 1e-14,
+    solve(a == L, w, solver_parameters={'ksp_rtol': 1e-14,
                                         'ksp_max_it': 30000}, bcs=bc)
     Hsigma, Hu, Hlambdar = w.split()
 
-    residual_helmholtz = sqrt(assemble(((Hu +  div(Hsigma))-f)*((Hu + div(Hsigma))-f)*dx))
+    residual_helmholtz = sqrt(assemble(((Hu +  div(Hsigma)) + f)*((Hu + div(Hsigma)) + f)*dx))
 
     File('Hu.pvd').write(Hu)
     V = VectorFunctionSpace(mesh, "DG", degree - 1)
     Hsigma_out = Function(V).project(Hsigma)
     File('Hsigma.pvd').write(Hsigma_out)
-
-    print residual_helmholtz
 
     # Non-hybridized helmholtz for comparison
     RT = FunctionSpace(mesh, "RT", degree)
@@ -53,8 +50,8 @@ def test_hybrid_helmholtz(mesh):
     sigma, u = TrialFunctions(W2)
     tau, v = TestFunctions(W2)
     w2 = Function(W2)
-    a = dot(tau, sigma)*dx - u*div(tau)*dx + u*v*dx + v*div(sigma)*dx
-    L = v*f*dx
+    a = dot(tau, sigma)*dx + u*div(tau)*dx + u*v*dx + v*div(sigma)*dx
+    L = -v*f*dx
     bc = DirichletBC(W2.sub(1), Constant(0), (1, 2, 3, 4))
     solve(a == L, w2, solver_parameters={'ksp_rtol': 1e-14,
                                          'ksp_max_it': 30000}, bcs=bc)
@@ -66,8 +63,10 @@ def test_hybrid_helmholtz(mesh):
     uerr = sqrt(assemble((Hu - NHu)*(Hu - NHu)*dx))
     sigerr = sqrt(assemble(dot(Hsigma - NHsigma, Hsigma - NHsigma)*dx))
 
-    print uerr, sigerr
+    print "The residual for the Helmholtz problem is: ", residual_helmholtz
+    print "There error in the computed vector term is: ", uerr
+    print "The error in the computed scalar term is: ", sigerr
 
-res = 8
+res = 10
 mesh = UnitSquareMesh(res, res)
 test_hybrid_helmholtz(mesh)
