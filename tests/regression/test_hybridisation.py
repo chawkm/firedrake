@@ -68,10 +68,10 @@ def test_hybridisation(degree):
           bcs=bcs)
     Hsigma, Hu, Hlambdar = w.split()
 
-    File('Hu.pvd').write(Hu)
-    Vx = VectorFunctionSpace(mesh, "DG", 1)
-    Hsigma_out = Function(Vx).project(Hsigma)
-    File('Hsigma.pvd').write(Hsigma_out)
+    #File('Hu.pvd').write(Hu)
+    #Vx = VectorFunctionSpace(mesh, "DG", 1)
+    #Hsigma_out = Function(Vx).project(Hsigma)
+    #File('Hsigma.pvd').write(Hsigma_out)
 
     # Compare result to non-hybridised calculation
     RT = FunctionSpace(mesh, "RT", degree)
@@ -84,15 +84,15 @@ def test_hybridisation(degree):
     solve(a == L, w2, solver_parameters={'ksp_rtol': 1e-14})
     NHsigma, NHu = w2.split()
 
-    File('NHu.pvd').write(NHu)
-    File('NHsigma.pvd').write(NHsigma)
+    #File('NHu.pvd').write(NHu)
+    #File('NHsigma.pvd').write(NHsigma)
 
     # Return L2 norm of error
     # (should be identical, i.e. comparable with solver tol)
     uerr = sqrt(assemble((Hu-NHu)*(Hu-NHu)*dx))
     sigerr = sqrt(assemble(dot(Hsigma-NHsigma, Hsigma-NHsigma)*dx))
     divergence = sqrt(assemble((div(Hsigma)-f)*(div(Hsigma)-f)*dx))
-    print uerr, sigerr, divergence
+    #print uerr, sigerr, divergence
 
     assert uerr < 1e-11
     assert sigerr < 4e-11
