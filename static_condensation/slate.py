@@ -7,47 +7,11 @@ Written by: Thomas Gibson
 from __future__ import absolute_import
 import numpy as np
 from singledispatch import singledispatch
-from gem.node import Node as NodeBase, Memoizer, noop_recursive
 import operator
 import itertools
 import functools
 import firedrake
 import ufl
-
-class Node(NodeBase):
-    """An abstract SLATE node class."""
-
-    __slots__ = ()
-
-    def __add__(self, other):
-        return TensorAdd(self, other)
-
-    def __sub__(self, other):
-        return TensorSub(self, other)
-
-    def __mul__(self, other):
-        return TensorMul(self, other)
-
-    def __neg__(self):
-        return Negative(self)
-
-    def __pos__(self):
-        return Positive(self)
-
-    @property
-    def inv(self):
-        return Inverse(self)
-
-    @property
-    def T(self):
-        return Transpose(self)
-
-    @property
-    def operands(self):
-        """Returns the objects which this object
-        operates on.
-        """
-        return ()
 
 
 class Tensor(ufl.form.Form):
@@ -56,7 +20,6 @@ class Tensor(ufl.form.Form):
     ufl.form for composability purposes.
     """
 
-    #__slots__ = ("id", "shapes", "shape", )
     children = ()
     id_num = 0
 
@@ -168,8 +131,8 @@ class Matrix(Tensor):
         self.rank = r
         self.form = form
         Tensor.id_num += 1
-        Tensor.__init__(self, arguments=form.arguments(),
-                        coefficients=form.coefficients())
+        Tensor.__init__(self, arguments=self.form.arguments(),
+                        coefficients=self.form.coefficients())
 
     def __str__(self):
         return "M_%d" % self.id
