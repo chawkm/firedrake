@@ -55,7 +55,7 @@ parameters = Parameters()
 """A nested dictionary of parameters used by Firedrake"""
 
 parameters.add(Parameters("assembly_cache",
-                          enabled=True,
+                          enabled=False,
                           eviction=True,
                           max_bytes=float("Inf"),
                           max_factor=0.6,
