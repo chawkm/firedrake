@@ -12,6 +12,8 @@ import itertools
 import functools
 import firedrake
 import ufl
+from coffee import base as AST
+from coffee.visitor import Visitor
 
 
 class Tensor(ufl.form.Form):
@@ -192,7 +194,7 @@ class UnaryOp(Tensor):
     An example is the negation operator: ('Negative(A)' = -A).
     """
 
-    __slots__  = ('children', )
+    __slots__ = ('children', )
 
     def __init__(self, tensor):
         self.children = tensor
@@ -203,8 +205,7 @@ class UnaryOp(Tensor):
     def __str__(self, order_of_operation=None):
         ops = {operator.neg: '-',
                operator.pos: '+'}
-        if (order_of_operation is None or
-            self.order_of_operation >= order_of_operation):
+        if (order_of_operation is None) or (self.order_of_operation >= order_of_operation):
             pars = lambda X: X
         else:
             pars = lambda X: "(%s)" % X
@@ -270,8 +271,7 @@ class BinaryOp(Tensor):
         ops = {operator.add: '+',
                operator.sub: '-',
                operator.mul: '*'}
-        if (order_of_operation is None or
-            self.order_of_operation >= order_of_operation):
+        if (order_of_operation is None) or (self.order_of_operation >= order_of_operation):
             pars = lambda X: X
         else:
             pars = lambda X: "(%s)" % X
