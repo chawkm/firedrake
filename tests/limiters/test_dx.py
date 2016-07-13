@@ -1,3 +1,4 @@
+from matplotlib import pyplot as plt
 from firedrake import *
 import numpy as np
 import argparse
@@ -61,7 +62,7 @@ def run_test(mesh, outfile, iterations):
 
     #Return numerical errror from starting position
     diff = assemble((D - D_old)**2 * dx) ** 0.5
-    print "Numerical error:", diff
+    return diff
 
     # L2 norm decreases
     #assert L2_T < L2_0
@@ -71,27 +72,37 @@ def run_test(mesh, outfile, iterations):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description="Output numerical error \
+                                                  in simple advection process")
     parser.add_argument("-verbose", action="store_true",
                         help="Increases output verbosity")
     parser.add_argument("iterations", help="Set the number of iterations", type=int,
                         default=100, nargs='?')
-    parser.add_argument("dx", help="Set the mesh size to use", type=int,
+    parser.add_argument("mesh_size", help="Set the mesh size to use", type=int,
                         default=30, nargs='?')
     args = parser.parse_args()
 
     if args.verbose:
         print "**********Start**********"
 
-    mesh_size = args.dx
+    mesh_size = args.mesh_size
 
     if args.verbose:
         print "iterations: ", args.iterations
         print "mesh_size:  ", mesh_size
         print "dt:         ", "1 /", args.iterations
 
-    run_test(PeriodicUnitSquareMesh(mesh_size,mesh_size), File("Periodic.pvd"),
-             args.iterations)
+    xs = []
+    ys = []
+    for i in range(10):
+        xs.append(1/(30+i))
+        ys.append(run_test(PeriodicUnitSquareMesh(30 + i, 30 + i), File("Periodic.pvd"),
+                 args.iterations))
+        print("done")
+
+    plt.plot(xs,ys)
+    plt.savefig('error.png')
+    plt.show()
 
     if args.verbose:
         print "**********Done**********"
