@@ -1,7 +1,48 @@
 from matplotlib import pyplot as plt
+from itertools import izip
 from firedrake import *
 import numpy as np
 import argparse
+import math
+
+def estimate_n(e1, e2, d1, d2):
+    return math.log(e1 / e2) / math.log(d1 / d2)
+
+def plot(args, title, xaxis, yaxis, filename, start=20, end=20):
+    print "Generating image"
+
+    error = True
+    if filename != 'error.png':
+        error = False
+
+    xs, ys, err = [], [], []
+
+    func = None
+    if error: func = ys.append
+    else:     func = err.append
+
+    for i in xrange(end):
+        xs.append(1./(start+i))
+        func(run_test(PeriodicUnitSquareMesh(start + i, start + i),
+                      File("Periodic.pvd"), args.iterations))
+        if args.verbose:
+            print i, "/", end
+
+    if not error: #then estimate n at each point
+        ys = [estimate_n(*args) for args in izip(err, err[1:], xs, xs[1:])]
+
+    #define graph
+    plt.xlabel(xaxis)
+    plt.ylabel(yaxis)
+    plt.title(title)
+    if error:
+        plt.plot(xs, ys)
+    else:
+        plt.plot(xs[1:],ys)
+    print "Saving png to:", filename
+    plt.savefig(filename)
+    plt.show()
+
 
 def run_test(mesh, outfile, iterations):
 #    mesh.init_cell_orientations(Expression(("x[0]", "x[1]", "x[2]")))
@@ -76,6 +117,10 @@ if __name__ == '__main__':
                                                   in simple advection process")
     parser.add_argument("-verbose", action="store_true",
                         help="Increases output verbosity")
+    parser.add_argument("-ploterror", action="store_true",
+                        help="Plots and saves image of error against mesh size")
+    parser.add_argument("-plotn", action="store_true",
+                        help="Plots and saves image of estimation of n against dx")
     parser.add_argument("iterations", help="Set the number of iterations", type=int,
                         default=100, nargs='?')
     parser.add_argument("mesh_size", help="Set the mesh size to use", type=int,
@@ -83,26 +128,26 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.verbose:
-        print "**********Start**********"
+        print "**********START**********"
 
     mesh_size = args.mesh_size
 
-    if args.verbose:
+    if args.verbose and not (args.ploterror or args.plotn):
         print "iterations: ", args.iterations
         print "mesh_size:  ", mesh_size
         print "dt:         ", "1 /", args.iterations
 
-    xs = []
-    ys = []
-    for i in range(10):
-        xs.append(1/(30+i))
-        ys.append(run_test(PeriodicUnitSquareMesh(30 + i, 30 + i), File("Periodic.pvd"),
-                 args.iterations))
-        print("done")
+#   Plots and saves error vs mesh_size
+    if args.ploterror:
+        plot(args, xaxis='dx', yaxis='Error',
+             title='Error as mesh size decreases (dt=1/100)',
+             filename='error.png')
 
-    plt.plot(xs,ys)
-    plt.savefig('error.png')
-    plt.show()
+#   Plots and saves n vs dx
+    if args.plotn:
+        plot(args, xaxis='dx', yaxis='n = log(e1/e2) / log(dx1/dx2)',
+              title='Estimating n whilst changing dx (dt=1/100)',
+              filename='estimate_n.png')
 
     if args.verbose:
-        print "**********Done**********"
+        print "**********FIN**********"
