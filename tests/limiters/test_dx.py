@@ -2,8 +2,7 @@ from firedrake import *
 import numpy as np
 import argparse
 
-
-def run_test(mesh, outfile):
+def run_test(mesh, outfile, iterations):
 #    mesh.init_cell_orientations(Expression(("x[0]", "x[1]", "x[2]")))
 
     V = FunctionSpace(mesh, "DG", 0)
@@ -12,8 +11,7 @@ def run_test(mesh, outfile):
     # advecting velocity
     u0 = Expression(('1','0'))
     u = Function(M).interpolate(u0)
-    
-    iterations = 100
+
     dt = 1. / iterations
 
     phi = TestFunction(V)
@@ -61,6 +59,10 @@ def run_test(mesh, outfile):
     L2_T = norm(D)
     Dbar_T = assemble(D*dx)
 
+    #Return numerical errror from starting position
+    diff = assemble((D - D_old)**2 * dx) ** 0.5
+    print "Numerical error:", diff
+
     # L2 norm decreases
     #assert L2_T < L2_0
 
@@ -69,8 +71,27 @@ def run_test(mesh, outfile):
 
 
 if __name__ == '__main__':
-    print "**********Start**********"
-    print "Mesh size>: ",
-    mesh_size = int(raw_input()) 
-    run_test(PeriodicUnitSquareMesh(mesh_size,mesh_size), File("Periodic.pvd"))
-    print "**********Done**********"
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-verbose", action="store_true",
+                        help="Increases output verbosity")
+    parser.add_argument("iterations", help="Set the number of iterations", type=int,
+                        default=100, nargs='?')
+    parser.add_argument("dx", help="Set the mesh size to use", type=int,
+                        default=30, nargs='?')
+    args = parser.parse_args()
+
+    if args.verbose:
+        print "**********Start**********"
+
+    mesh_size = args.dx
+
+    if args.verbose:
+        print "iterations: ", args.iterations
+        print "mesh_size:  ", mesh_size
+        print "dt:         ", "1 /", args.iterations
+
+    run_test(PeriodicUnitSquareMesh(mesh_size,mesh_size), File("Periodic.pvd"),
+             args.iterations)
+
+    if args.verbose:
+        print "**********Done**********"

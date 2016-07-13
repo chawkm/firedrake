@@ -12,7 +12,8 @@ def run_test(mesh, outfile):
     u0 = Expression(('1','0'))
     u = Function(M).interpolate(u0)
     
-    dt = (pi/3) * 0.006
+    iterations = 100
+    dt = 1. / iterations
 
     phi = TestFunction(V)
     D = TrialFunction(V)
@@ -34,9 +35,7 @@ def run_test(mesh, outfile):
     D0 = Expression(sin(2*pi*x[0]))
     D = Function(V).interpolate(D0)
     D_old = Function(D)
-    outfile.write(D1)
 
-    iterations = 100
     t = 0.0
     T = iterations*dt
 
@@ -70,9 +69,7 @@ def run_test(mesh, outfile):
 
 if __name__ == '__main__':
     print "**********Start**********"
-    run_test(PeriodicUnitSquareMesh(30,30), File("Periodic.pvd"))
-    '''
-    run_test(UnitIcosahedralSphereMesh(refinement_level=3), File("UnitIcs.pvd"))
-    run_test(UnitCubedSphereMesh(refinement_level=4),File("UnitCbd.pvd"))
-    '''
+    print "Mesh size>: ",
+    mesh_size = int(raw_input()) 
+    run_test(PeriodicUnitSquareMesh(mesh_size,mesh_size), File("Periodic.pvd"))
     print "**********Done**********"
